@@ -1,6 +1,7 @@
 import { Command } from '../types';
 import { supabase } from '../utils/supabaseClient';
 import { getCurrentWIBTime } from '../utils/time';
+import { findUserById } from '../utils/userUtils';
 
 const daftarCommand: Command = {
   name: 'daftar',
@@ -57,19 +58,11 @@ Contoh: .daftar ABC950 | 15-08-2005`;
         return '❌ Kode pendaftaran tidak valid atau sudah digunakan.';
       }
 
-      // Check if user is already registered
-      const existingUserCheck = isGroup 
-        ? { whatsapp_lid: senderId }
-        : { whatsapp_id: senderId };
-
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('name')
-        .or(`whatsapp_id.eq.${senderId},whatsapp_lid.eq.${senderId}`)
-        .single();
+      // Check if user is already registered using centralized user lookup
+      const existingUser = await findUserById(senderId);
 
       if (existingUser) {
-        return '❌ WhatsApp Anda sudah terdaftar di sistem.';
+        return `❌ WhatsApp Anda sudah terdaftar di sistem dengan nama: ${existingUser.name}`;
       }
 
       // Update user with WhatsApp ID and birthday

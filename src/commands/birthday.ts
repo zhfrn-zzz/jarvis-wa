@@ -1,6 +1,7 @@
 import { Command } from '../types';
 import { supabase } from '../utils/supabaseClient';
 import { getCurrentWIBTime, formatWIBDate } from '../utils/time';
+import { findUserById } from '../utils/userUtils';
 
 const birthdayCommand: Command = {
   name: 'birthday',
@@ -79,20 +80,28 @@ async function setBirthday(args: string[], senderId: string): Promise<string> {
   const pgDateFormat = `${year}-${month}-${day}`;
 
   try {
+    // Find user using centralized utility
+    const user = await findUserById(senderId);
+    
+    if (!user) {
+      return 'User tidak ditemukan. Pastikan Anda terdaftar di sistem.';
+    }
+
     // Update user's birthday
     const { data, error } = await supabase
       .from('users')
       .update({ birthday: pgDateFormat })
-      .eq('whatsapp_id', senderId)
+      .eq('id', user.id)
       .select('name, birthday')
       .single();
 
     if (error) {
-      return `Error: ${error.message}`;
+      console.error('Error updating birthday:', error);
+      return `Terjadi kesalahan saat menyimpan birthday: ${error.message}`;
     }
 
     if (!data) {
-      return 'User tidak ditemukan. Pastikan Anda terdaftar di sistem.';
+      return 'Terjadi kesalahan saat menyimpan birthday.';
     }
 
     // Calculate age

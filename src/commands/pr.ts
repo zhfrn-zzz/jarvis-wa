@@ -1,5 +1,6 @@
 import { supabase } from '../utils/supabaseClient';
 import { getCurrentWIBTime, formatWIBDate, getTomorrowWIB, parseIndonesianDay, getDayNameForDatabase } from '../utils/time';
+import { getUserRole } from '../utils/userUtils';
 import { Command } from '../types';
 
 const prCommand: Command = {
@@ -29,7 +30,7 @@ const prCommandWithRoles: Command = {
   async execute(args: string[], senderId: string, isGroup: boolean): Promise<string> {
     if (args.length > 0 && args[0].toLowerCase() === 'add') {
       // Check permissions for add command
-      const userRole = await getUserRole(senderId, isGroup);
+      const userRole = await getUserRole(senderId);
       const allowedRoles = ['Owner', 'Sekretaris 1', 'Sekretaris 2'];
       
       if (!userRole || !allowedRoles.includes(userRole)) {
@@ -112,24 +113,7 @@ async function getHomeworkByDate(dateStr: string, dayLabel: string): Promise<str
   }
 }
 
-async function getUserRole(senderId: string, isGroup: boolean): Promise<string | null> {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('whatsapp_id', senderId)
-      .single();
 
-    if (error || !data) {
-      return null;
-    }
-
-    return data.role;
-  } catch (error) {
-    console.error('Error fetching user role:', error);
-    return null;
-  }
-}
 
 async function getActiveHomework(): Promise<string> {
   const today = getCurrentWIBTime();

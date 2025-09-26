@@ -1,14 +1,14 @@
 export interface User {
-  id: number;
+  id: string;
   whatsapp_id?: string;
   whatsapp_lid?: string;
-  nama: string;
+  name: string;
   role: 'Owner' | 'Siswa' | 'Sekretaris 1' | 'Sekretaris 2' | 'Bendahara 1' | 'Bendahara 2' | 'Ketua Kelas' | 'Wakil Ketua';
-  email?: string;
   birthday?: string;
   xp?: number;
   level?: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface JadwalKelas {

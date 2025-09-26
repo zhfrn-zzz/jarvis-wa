@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { findUserById } from './userUtils';
 
 export interface LevelUpInfo {
   leveledUp: boolean;
@@ -16,14 +17,10 @@ export interface LevelUpInfo {
  */
 export async function addXp(userId: string, amount: number): Promise<LevelUpInfo> {
   try {
-    // Find user by whatsapp_id
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, name, xp, level')
-      .eq('whatsapp_id', userId)
-      .single();
+    // Find user using centralized utility
+    const user = await findUserById(userId);
 
-    if (userError || !user) {
+    if (!user) {
       // User not found, return default info (no XP added)
       return {
         leveledUp: false,
@@ -92,13 +89,9 @@ export async function addXp(userId: string, amount: number): Promise<LevelUpInfo
  */
 export async function getUserProfile(userId: string) {
   try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('name, role, xp, level, whatsapp_id')
-      .eq('whatsapp_id', userId)
-      .single();
+    const user = await findUserById(userId);
 
-    if (error || !user) {
+    if (!user) {
       return null;
     }
 
@@ -109,7 +102,7 @@ export async function getUserProfile(userId: string) {
     const xpProgress = currentXp % 100;
     const xpNeeded = 100 - xpProgress;
 
-    // Handle empty nama
+    // Handle empty name
     const displayName = user.name || `User ${userId.split('@')[0]}`;
 
     return {
@@ -134,6 +127,8 @@ export async function getUserProfile(userId: string) {
  */
 export async function getUserProfileByName(userName: string) {
   try {
+    // Note: This function still uses direct database query since findUserById searches by ID, not name
+    // This maintains the existing functionality for name-based searches
     const { data: user, error } = await supabase
       .from('users')
       .select('name, role, xp, level, whatsapp_id')

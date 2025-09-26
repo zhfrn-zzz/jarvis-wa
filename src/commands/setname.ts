@@ -1,12 +1,13 @@
 import { Command } from '../types';
 import { supabase } from '../utils/supabaseClient';
+import { findUserById } from '../utils/userUtils';
 
 const setNameCommand: Command = {
   name: 'setname',
   aliases: ['updatename'],
   description: 'Set nama lengkap untuk profil Anda',
   
-  async execute(args: string[], senderId: string, isGroup: boolean): Promise<string> {
+  async execute(args: string[], senderId: string): Promise<string> {
     try {
       if (args.length === 0) {
         return 'Format: .setname <nama lengkap>\nContoh: .setname Zhafran Arifindhito';
@@ -14,11 +15,18 @@ const setNameCommand: Command = {
 
       const fullName = args.join(' ');
       
+      // First check if user exists using centralized function
+      const user = await findUserById(senderId);
+      if (!user) {
+        return 'User tidak ditemukan. Pastikan Anda terdaftar di sistem.';
+      }
+
+      // Update the user's name using their database ID
       const { data, error } = await supabase
         .from('users')
-        .update({ nama: fullName })
-        .eq('whatsapp_id', senderId)
-        .select('nama, role')
+        .update({ name: fullName })
+        .eq('id', user.id)
+        .select('name, role')
         .single();
 
       if (error) {
@@ -26,11 +34,11 @@ const setNameCommand: Command = {
       }
 
       if (!data) {
-        return 'User tidak ditemukan. Pastikan Anda terdaftar di sistem.';
+        return 'Gagal mengupdate nama. Silakan coba lagi.';
       }
 
       return `✅ Nama berhasil diupdate!
-Nama: ${data.nama}
+Nama: ${data.name}
 Role: ${data.role}
 
 Sekarang coba .profile untuk melihat profil Anda!`;

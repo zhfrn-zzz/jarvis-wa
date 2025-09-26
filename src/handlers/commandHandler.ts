@@ -1,8 +1,8 @@
 import { readdirSync } from 'fs';
 import { join } from 'path';
-import { supabase } from '../utils/supabaseClient';
 import { addXp } from '../utils/xpManager';
-import { Command, User } from '../types';
+import { getUserRole } from '../utils/userUtils';
+import { Command } from '../types';
 
 class CommandHandler {
   private commands: Map<string, Command> = new Map();
@@ -46,24 +46,7 @@ class CommandHandler {
     }
   }
 
-  private async getUserRole(senderId: string, isGroup: boolean): Promise<string | null> {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('whatsapp_id', senderId)
-        .single();
 
-      if (error || !data) {
-        return null;
-      }
-
-      return data.role;
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-      return null;
-    }
-  }
 
   private hasPermission(userRole: string | null, allowedRoles?: string[]): boolean {
     if (!allowedRoles || allowedRoles.length === 0) {
@@ -95,10 +78,10 @@ class CommandHandler {
     }
 
     // Check permissions
-    const userRole = await this.getUserRole(senderId, isGroup);
+    const userRole = await getUserRole(senderId);
     
     if (!this.hasPermission(userRole, command.allowedRoles)) {
-      return 'Tidak memiliki izin untuk menggunakan command ini.';
+      return 'Anda tidak memiliki izin untuk menggunakan command ini. Silakan hubungi admin jika Anda merasa ini adalah kesalahan.';
     }
 
     try {
