@@ -1,6 +1,7 @@
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { supabase } from '../utils/supabaseClient';
+import { addXp } from '../utils/xpManager';
 import { Command, User } from '../types';
 
 class CommandHandler {
@@ -97,14 +98,27 @@ class CommandHandler {
     const userRole = await this.getUserRole(senderId, isGroup);
     
     if (!this.hasPermission(userRole, command.allowedRoles)) {
-      return '❌ Anda tidak memiliki izin untuk menggunakan command ini.';
+      return 'Tidak memiliki izin untuk menggunakan command ini.';
     }
 
     try {
-      return await command.execute(args, senderId, isGroup);
+      const response = await command.execute(args, senderId, isGroup);
+      
+      // Add XP for successful command execution
+      if (response && !response.startsWith('❌') && !response.includes('tidak ditemukan')) {
+        const levelInfo = await addXp(senderId, 5);
+        
+        // If user leveled up, add congratulations message
+        if (levelInfo.leveledUp) {
+          const levelUpMessage = `\n\n🎉 Selamat! Anda naik ke Level ${levelInfo.newLevel}! (+5 XP)`;
+          return response + levelUpMessage;
+        }
+      }
+      
+      return response;
     } catch (error) {
       console.error(`Error executing command ${command.name}:`, error);
-      return '❌ Terjadi kesalahan saat menjalankan command.';
+      return 'Terjadi kesalahan saat menjalankan command.';
     }
   }
 

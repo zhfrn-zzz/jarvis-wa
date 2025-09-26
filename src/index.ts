@@ -9,12 +9,15 @@ import qrcode from 'qrcode-terminal';
 import dotenv from 'dotenv';
 import { commandHandler } from './handlers/commandHandler';
 import { DailyAnnouncementScheduler } from './schedulers/dailyAnnouncement';
+import { BirthdayChecker } from './schedulers/birthdayChecker';
+import { botManager } from './utils/botManager';
 
 dotenv.config();
 
 class JarvisBot {
   private sock: any;
   private scheduler: DailyAnnouncementScheduler | null = null;
+  private birthdayChecker: BirthdayChecker | null = null;
 
   async start(): Promise<void> {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -41,6 +44,8 @@ class JarvisBot {
         }
       } else if (connection === 'open') {
         console.log('✅ Jarvis Bot connected successfully!');
+        // Store bot socket reference for commands that need it
+        botManager.setBotSocket(this.sock);
         this.initializeSchedulers();
       }
     });
@@ -53,6 +58,11 @@ class JarvisBot {
     if (!this.scheduler) {
       this.scheduler = new DailyAnnouncementScheduler(this.sock);
       this.scheduler.start();
+    }
+    
+    if (!this.birthdayChecker) {
+      this.birthdayChecker = new BirthdayChecker(this.sock);
+      this.birthdayChecker.start();
     }
   }
 

@@ -1,10 +1,13 @@
 export interface User {
   id: number;
   whatsapp_id?: string;
-  nama_lengkap: string;
+  whatsapp_lid?: string;
+  nama: string;
   role: 'Owner' | 'Siswa' | 'Sekretaris 1' | 'Sekretaris 2' | 'Bendahara 1' | 'Bendahara 2' | 'Ketua Kelas' | 'Wakil Ketua';
   email?: string;
   birthday?: string;
+  xp?: number;
+  level?: number;
   created_at?: string;
 }
 
