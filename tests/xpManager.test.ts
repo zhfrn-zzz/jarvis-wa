@@ -1,4 +1,4 @@
-import { addXp, getUserProfile } from '../src/utils/xpManager';
+import { addXp } from '../src/utils/xpManager';
 import { findUserById } from '../src/utils/userUtils';
 import { supabase } from '../src/utils/supabaseClient';
 
@@ -28,7 +28,7 @@ describe('XP Manager', () => {
 
   describe('addXp', () => {
     const mockUser = {
-      id: '1',
+      id: 'e13fa755-0781-47d7-bef1-0d874ca45ce8',
       whatsapp_id: '1234567890@s.whatsapp.net',
       name: 'Test User',
       role: 'Siswa' as const,
@@ -155,12 +155,12 @@ describe('XP Manager', () => {
         newXp: 95,
         xpToNext: 105
       });
-      expect(console.error).toHaveBeenCalledWith('Error updating user XP:', { message: 'Database error' });
+      expect(console.error).toHaveBeenCalledWith('[xpManager] Database error updating XP for user Test User:', expect.objectContaining({ userId: '1234567890@s.whatsapp.net', error: 'Database error' }));
     });
 
     it('should handle users with no initial XP/level', async () => {
       const newUser = {
-        id: '1',
+        id: 'f24fa755-0781-47d7-bef1-0d874ca45ce9',
         whatsapp_id: '1234567890@s.whatsapp.net',
         name: 'New User',
         role: 'Siswa' as const
@@ -193,48 +193,4 @@ describe('XP Manager', () => {
     });
   });
 
-  describe('getUserProfile', () => {
-    const mockUser = {
-      id: '1',
-      whatsapp_id: '1234567890@s.whatsapp.net',
-      name: 'Test User',
-      role: 'Siswa' as const,
-      xp: 150,
-      level: 2
-    };
-
-    it('should return user profile when user exists', async () => {
-      mockFindUserById.mockResolvedValue(mockUser);
-
-      const result = await getUserProfile('1234567890@s.whatsapp.net');
-
-      expect(mockFindUserById).toHaveBeenCalledWith('1234567890@s.whatsapp.net');
-      expect(result).toEqual({
-        name: 'Test User',
-        role: 'Siswa',
-        level: 2,
-        xp: 150,
-        xpProgress: 50,
-        xpNeeded: 50,
-        xpForNextLevel: 100
-      });
-    });
-
-    it('should return null when user not found', async () => {
-      mockFindUserById.mockResolvedValue(null);
-
-      const result = await getUserProfile('nonexistent@s.whatsapp.net');
-
-      expect(result).toBeNull();
-    });
-
-    it('should handle errors gracefully', async () => {
-      mockFindUserById.mockRejectedValue(new Error('Database error'));
-
-      const result = await getUserProfile('1234567890@s.whatsapp.net');
-
-      expect(result).toBeNull();
-      expect(console.error).toHaveBeenCalledWith('Error getting user profile:', expect.any(Error));
-    });
-  });
 });

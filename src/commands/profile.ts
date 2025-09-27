@@ -14,9 +14,7 @@ const profileCommand: Command = {
       
       if (args.length === 0) {
         // Show sender's profile
-        console.log(`[profile] Looking up user with ID: ${senderId}`);
         user = await findUserById(senderId);
-        console.log(`[profile] findUserById result:`, user);
         
         if (!user) {
           // Additional debugging - check both columns directly
@@ -26,7 +24,7 @@ const profileCommand: Command = {
             .or(`whatsapp_id.eq.${senderId},whatsapp_lid.eq.${senderId}`)
             .limit(1);
           
-          console.log(`[profile] Direct database check result:`, directCheck);
+          console.error(`[profile] User lookup failed for ${senderId}. Direct check result:`, directCheck);
           
           return `Profil tidak ditemukan. 
 ID Anda: ${senderId}

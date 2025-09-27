@@ -17,7 +17,7 @@ jest.mock('../src/utils/supabaseClient', () => ({
 
 describe('userUtils', () => {
   const mockSupabase = supabase as jest.Mocked<typeof supabase>;
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset console mocks
@@ -28,7 +28,7 @@ describe('userUtils', () => {
 
   describe('findUserById', () => {
     const mockUser = {
-      id: '1',
+      id: 'e13fa755-0781-47d7-bef1-0d874ca45ce8',
       whatsapp_id: '1234567890@s.whatsapp.net',
       whatsapp_lid: '1234567890@lid',
       name: 'Test User',
@@ -46,7 +46,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: [mockUser], error: null })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: 1, error: null })
@@ -70,7 +70,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: [mockUser], error: null })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: 1, error: null })
@@ -92,7 +92,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: [], error: null })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: 0, error: null })
@@ -105,7 +105,7 @@ describe('userUtils', () => {
       const result = await findUserById('nonexistent@s.whatsapp.net');
 
       expect(result).toBeNull();
-      expect(console.log).toHaveBeenCalledWith('[userUtils] User not found: nonexistent@s.whatsapp.net');
+      expect(console.log).toHaveBeenCalledWith('[userUtils] User not found in database: nonexistent@s.whatsapp.net');
     });
 
     it('should handle database errors gracefully', async () => {
@@ -114,7 +114,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: null, error: { message: 'Database error' } })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: null, error: { message: 'Count error' } })
@@ -127,8 +127,8 @@ describe('userUtils', () => {
       const result = await findUserById('test@s.whatsapp.net');
 
       expect(result).toBeNull();
-      expect(console.error).toHaveBeenCalledWith('[userUtils] Error counting users for test@s.whatsapp.net:', { message: 'Count error' });
-      expect(console.error).toHaveBeenCalledWith('[userUtils] Database error looking up user test@s.whatsapp.net:', { message: 'Database error' });
+      expect(console.error).toHaveBeenCalledWith('[userUtils] Error counting users for test@s.whatsapp.net:', expect.objectContaining({ error: 'Count error' }));
+      expect(console.error).toHaveBeenCalledWith('[userUtils] Database error during user lookup:', expect.objectContaining({ userId: 'test@s.whatsapp.net', error: 'Database error' }));
     });
 
     it('should warn when multiple users found', async () => {
@@ -137,7 +137,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: [mockUser], error: null })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: 2, error: null })
@@ -150,7 +150,7 @@ describe('userUtils', () => {
       const result = await findUserById('duplicate@s.whatsapp.net');
 
       expect(result).toEqual(mockUser);
-      expect(console.warn).toHaveBeenCalledWith('[userUtils] Multiple users found for ID duplicate@s.whatsapp.net (count: 2). Using first match.');
+      expect(console.warn).toHaveBeenCalledWith('[userUtils] Data integrity warning: Multiple users found for ID duplicate@s.whatsapp.net (count: 2). Using first match.');
     });
 
     it('should handle various user ID formats', async () => {
@@ -168,7 +168,7 @@ describe('userUtils', () => {
           or: jest.fn().mockReturnThis(),
           limit: jest.fn().mockResolvedValue({ data: [mockUser], error: null })
         };
-        
+
         const mockCountChain = {
           select: jest.fn().mockReturnThis(),
           or: jest.fn().mockResolvedValue({ count: 1, error: null })
@@ -189,7 +189,7 @@ describe('userUtils', () => {
   describe('getUserRole', () => {
     it('should return user role when user exists', async () => {
       const mockUser = {
-        id: '1',
+        id: 'e13fa755-0781-47d7-bef1-0d874ca45ce8',
         whatsapp_id: '1234567890@s.whatsapp.net',
         name: 'Test User',
         role: 'Owner' as const
@@ -200,7 +200,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: [mockUser], error: null })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: 1, error: null })
@@ -213,7 +213,7 @@ describe('userUtils', () => {
       const result = await getUserRole('1234567890@s.whatsapp.net');
 
       expect(result).toBe('Owner');
-      expect(console.log).toHaveBeenCalledWith('[userUtils] Role found for user Test User: Owner');
+      expect(console.log).toHaveBeenCalledWith('[userUtils] Role lookup successful: Test User has role \'Owner\'');
     });
 
     it('should return null when user not found', async () => {
@@ -222,7 +222,7 @@ describe('userUtils', () => {
         or: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue({ data: [], error: null })
       };
-      
+
       const mockCountChain = {
         select: jest.fn().mockReturnThis(),
         or: jest.fn().mockResolvedValue({ count: 0, error: null })
@@ -235,7 +235,7 @@ describe('userUtils', () => {
       const result = await getUserRole('nonexistent@s.whatsapp.net');
 
       expect(result).toBeNull();
-      expect(console.log).toHaveBeenCalledWith('[userUtils] No role found for user: nonexistent@s.whatsapp.net');
+      expect(console.log).toHaveBeenCalledWith('[userUtils] Role lookup failed: User not found for nonexistent@s.whatsapp.net');
     });
   });
 });

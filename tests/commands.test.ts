@@ -38,7 +38,7 @@ describe('Refactored Commands', () => {
 
   describe('Profile Command', () => {
     const mockUser = {
-      id: '1',
+      id: 'e13fa755-0781-47d7-bef1-0d874ca45ce8',
       whatsapp_id: '1234567890@s.whatsapp.net',
       name: 'Test User',
       role: 'Siswa' as const,
@@ -132,7 +132,7 @@ describe('Refactored Commands', () => {
 
   describe('Birthday Command', () => {
     const mockUser = {
-      id: '1',
+      id: 'e13fa755-0781-47d7-bef1-0d874ca45ce8',
       whatsapp_id: '1234567890@s.whatsapp.net',
       name: 'Test User',
       role: 'Siswa' as const

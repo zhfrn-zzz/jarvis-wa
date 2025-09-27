@@ -15,9 +15,7 @@ const debugCommand: Command = {
       debugInfo += `Is Group: ${isGroup}\n\n`;
 
       // Use centralized findUserById function
-      console.log(`[debug] About to call findUserById with: ${senderId}`);
       const foundUser = await findUserById(senderId);
-      console.log(`[debug] findUserById returned:`, foundUser);
       
       debugInfo += `findUserById Result:\n`;
       debugInfo += `User Found: ${foundUser ? 'Yes' : 'No'}\n`;

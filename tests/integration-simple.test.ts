@@ -11,7 +11,7 @@ describe('Integration Tests - Core Functionality', () => {
   const mockAddXp = addXp as jest.MockedFunction<typeof addXp>;
 
   const mockUser = {
-    id: '1',
+    id: 'e13fa755-0781-47d7-bef1-0d874ca45ce8',
     whatsapp_id: '1234567890@s.whatsapp.net',
     whatsapp_lid: '1234567890@lid',
     name: 'Test User',

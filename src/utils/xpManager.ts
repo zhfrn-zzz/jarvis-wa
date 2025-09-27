@@ -17,10 +17,13 @@ export interface LevelUpInfo {
  */
 export async function addXp(userId: string, amount: number): Promise<LevelUpInfo> {
   try {
+    console.log(`[xpManager] Adding ${amount} XP to user: ${userId}`);
+    
     // Find user using centralized utility
     const user = await findUserById(userId);
 
     if (!user) {
+      console.warn(`[xpManager] Cannot add XP: User not found for ${userId}`);
       // User not found, return default info (no XP added)
       return {
         leveledUp: false,
@@ -42,6 +45,8 @@ export async function addXp(userId: string, amount: number): Promise<LevelUpInfo
     const xpInCurrentLevel = newXp % 100;
     const xpToNext = 100 - xpInCurrentLevel;
 
+    console.log(`[xpManager] XP calculation for ${user.name}: ${currentXp} -> ${newXp} (Level ${currentLevel} -> ${newLevel})`);
+
     // Update user in database
     const { error: updateError } = await supabase
       .from('users')
@@ -52,7 +57,12 @@ export async function addXp(userId: string, amount: number): Promise<LevelUpInfo
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Error updating user XP:', updateError);
+      console.error(`[xpManager] Database error updating XP for user ${user.name}:`, {
+        userId,
+        error: updateError.message,
+        code: updateError.code,
+        details: updateError.details
+      });
       return {
         leveledUp: false,
         oldLevel: currentLevel,
@@ -62,8 +72,13 @@ export async function addXp(userId: string, amount: number): Promise<LevelUpInfo
       };
     }
 
+    const leveledUp = newLevel > currentLevel;
+    if (leveledUp) {
+      console.log(`[xpManager] Level up! ${user.name} reached level ${newLevel}`);
+    }
+
     return {
-      leveledUp: newLevel > currentLevel,
+      leveledUp,
       oldLevel: currentLevel,
       newLevel: newLevel,
       newXp: newXp,
@@ -71,7 +86,12 @@ export async function addXp(userId: string, amount: number): Promise<LevelUpInfo
     };
 
   } catch (error) {
-    console.error('Error in addXp:', error);
+    console.error(`[xpManager] Unexpected error adding XP:`, {
+      userId,
+      amount,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return {
       leveledUp: false,
       oldLevel: 0,
@@ -82,84 +102,3 @@ export async function addXp(userId: string, amount: number): Promise<LevelUpInfo
   }
 }
 
-/**
- * Get user profile information
- * @param userId - WhatsApp ID of the user
- * @returns User profile data
- */
-export async function getUserProfile(userId: string) {
-  try {
-    const user = await findUserById(userId);
-
-    if (!user) {
-      return null;
-    }
-
-    const currentXp = user.xp || 0;
-    const currentLevel = user.level || 1;
-    
-    // Calculate XP progress within current level (0-99 for each level)
-    const xpProgress = currentXp % 100;
-    const xpNeeded = 100 - xpProgress;
-
-    // Handle empty name
-    const displayName = user.name || `User ${userId.split('@')[0]}`;
-
-    return {
-      name: displayName,
-      role: user.role,
-      level: currentLevel,
-      xp: currentXp,
-      xpProgress: xpProgress,
-      xpNeeded: xpNeeded,
-      xpForNextLevel: 100 // Always 100 XP per level
-    };
-  } catch (error) {
-    console.error('Error getting user profile:', error);
-    return null;
-  }
-}
-
-/**
- * Find user by name (for profile command with arguments)
- * @param userName - Name to search for
- * @returns User profile data
- */
-export async function getUserProfileByName(userName: string) {
-  try {
-    // Note: This function still uses direct database query since findUserById searches by ID, not name
-    // This maintains the existing functionality for name-based searches
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('name, role, xp, level, whatsapp_id')
-      .ilike('name', `%${userName}%`)
-      .single();
-
-    if (error || !user) {
-      return null;
-    }
-
-    const currentXp = user.xp || 0;
-    const currentLevel = user.level || 1;
-    
-    // Calculate XP progress within current level (0-99 for each level)
-    const xpProgress = currentXp % 100;
-    const xpNeeded = 100 - xpProgress;
-
-    // Handle empty name
-    const displayName = user.name || `User ${user.whatsapp_id?.split('@')[0] || 'Unknown'}`;
-
-    return {
-      name: displayName,
-      role: user.role,
-      level: currentLevel,
-      xp: currentXp,
-      xpProgress: xpProgress,
-      xpNeeded: xpNeeded,
-      xpForNextLevel: 100
-    };
-  } catch (error) {
-    console.error('Error getting user profile by name:', error);
-    return null;
-  }
-}
