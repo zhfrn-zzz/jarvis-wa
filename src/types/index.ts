@@ -58,6 +58,16 @@ export interface Settings {
   value: string;
 }
 
+export interface ClassNote {
+  id: number;
+  note_id: string;
+  title: string;
+  content: string;
+  created_by?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface Command {
   name: string;
   aliases?: string[];

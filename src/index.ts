@@ -2,7 +2,8 @@ import makeWASocket, {
   DisconnectReason, 
   useMultiFileAuthState,
   WAMessageKey,
-  proto
+  proto,
+  downloadMediaMessage
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode-terminal';
@@ -72,13 +73,20 @@ class JarvisBot {
     if (!message.message || message.key.fromMe) return;
 
     const messageText = this.extractMessageText(message);
-    if (!messageText || !messageText.startsWith('.')) return;
-
     const senderId = message.key.remoteJid;
     const isGroup = senderId?.endsWith('@g.us') || false;
     
     // For groups, use participant ID, for DMs use remoteJid
     const userId = isGroup ? message.key.participant : senderId;
+
+    // Handle sticker command specially (requires media processing)
+    if (messageText && this.isStickerCommand(messageText)) {
+      await this.handleStickerCommand(message, senderId);
+      return;
+    }
+
+    // Handle regular text commands
+    if (!messageText || !messageText.startsWith('.')) return;
 
     try {
       const response = await commandHandler.handleMessage(messageText, userId, isGroup);
@@ -103,7 +111,92 @@ class JarvisBot {
       return message.message.extendedTextMessage.text;
     }
 
+    // Check for image/video with caption
+    if (message.message?.imageMessage?.caption) {
+      return message.message.imageMessage.caption;
+    }
+
+    if (message.message?.videoMessage?.caption) {
+      return message.message.videoMessage.caption;
+    }
+
     return null;
+  }
+
+  private isStickerCommand(messageText: string): boolean {
+    const text = messageText.toLowerCase().trim();
+    return text === '.sticker' || text === '.s' || text === '.stiker';
+  }
+
+  private async handleStickerCommand(message: any, senderId: string): Promise<void> {
+    try {
+      console.log('[JarvisBot] Processing sticker command');
+
+      // Check for quoted message (reply)
+      const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      let quotedMessageObj = undefined;
+      
+      if (quotedMessage) {
+        quotedMessageObj = {
+          key: { id: 'quoted' }, // Mock key for quoted message
+          message: quotedMessage
+        } as any;
+      }
+
+      // Use simple sticker handler for detection and validation
+      const { handleSimpleStickerCommand } = await import('./handlers/simpleStickerHandler');
+      const result = await handleSimpleStickerCommand(message, quotedMessageObj);
+
+      // Check if media was detected and try full processing
+      if (result.mediaDetected) {
+        try {
+          console.log('[JarvisBot] Media detected, attempting full sticker processing...');
+          
+          // Import full sticker handler
+          const { handleStickerCommand } = await import('./handlers/stickerHandler');
+          const stickerResult = await handleStickerCommand(message, quotedMessageObj);
+
+          if (stickerResult.success && stickerResult.stickerBuffer) {
+            console.log(`[JarvisBot] Sticker processing successful, sending ${stickerResult.isAnimated ? 'animated' : 'static'} sticker...`);
+            
+            // Send sticker with proper parameters for animated stickers
+            const stickerMessage: any = {
+              sticker: stickerResult.stickerBuffer,
+              mimetype: 'image/webp'
+            };
+            
+            // Add animated flag for animated stickers
+            if (stickerResult.isAnimated) {
+              stickerMessage.isAnimated = true;
+            }
+            
+            await this.sock.sendMessage(senderId, stickerMessage);
+            
+            // Send success message
+            await this.sock.sendMessage(senderId, { 
+              text: `✅ **Stiker ${stickerResult.isAnimated ? 'bergerak' : 'statis'} berhasil dibuat!**` 
+            });
+          } else {
+            console.log('[JarvisBot] Sticker processing failed:', stickerResult.message);
+            await this.sock.sendMessage(senderId, { text: stickerResult.message });
+          }
+        } catch (processingError) {
+          console.error('[JarvisBot] Sticker processing error:', processingError);
+          await this.sock.sendMessage(senderId, {
+            text: `❌ Gagal memproses sticker: ${processingError instanceof Error ? processingError.message : 'Unknown error'}`
+          });
+        }
+      } else {
+        // No media detected, send detection result message
+        await this.sock.sendMessage(senderId, { text: result.message });
+      }
+
+    } catch (error) {
+      console.error('[JarvisBot] Error in sticker command:', error);
+      await this.sock.sendMessage(senderId, {
+        text: '❌ Terjadi kesalahan saat memproses sticker command.'
+      });
+    }
   }
 }
 

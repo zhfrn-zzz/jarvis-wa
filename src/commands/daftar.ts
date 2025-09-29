@@ -1,7 +1,5 @@
 import { Command } from '../types';
 import { supabase } from '../utils/supabaseClient';
-import { getCurrentWIBTime } from '../utils/time';
-import { findUserById } from '../utils/userUtils';
 
 const daftarCommand: Command = {
   name: 'daftar',
@@ -16,7 +14,8 @@ const daftarCommand: Command = {
 
 Contoh: .daftar ABC950 | 15-08-2005
 
-Hubungi admin untuk mendapatkan kode pendaftaran Anda.`;
+Hubungi admin untuk mendapatkan kode pendaftaran Anda.
+Anda dapat menggunakan kode yang sama untuk mendaftar di chat pribadi dan grup.`;
       }
 
       // Join all arguments and split by |
@@ -43,72 +42,120 @@ Contoh: .daftar ABC950 | 15-08-2005`;
         return birthdayValidation.error || '❌ Format tanggal lahir tidak valid.';
       }
 
-      // Check if registration code exists and is not used
+      // Step 2: Check if registration code exists (no longer check is_used)
       const { data: codeData, error: codeError } = await supabase
         .from('registration_codes')
-        .select('*')
+        .select('student_name')
         .eq('code', registrationCode)
         .single();
 
       if (codeError || !codeData) {
-        return '❌ Kode pendaftaran tidak valid atau sudah digunakan.';
+        return '❌ Kode pendaftaran tidak valid.';
       }
 
-      if (codeData.is_used) {
-        return '❌ Kode pendaftaran tidak valid atau sudah digunakan.';
-      }
-
-      // Check if user is already registered using centralized user lookup
-      const existingUser = await findUserById(senderId);
-
-      if (existingUser) {
-        return `❌ WhatsApp Anda sudah terdaftar di sistem dengan nama: ${existingUser.name}`;
-      }
-
-      // Update user with WhatsApp ID and birthday
-      const updateData = {
-        ...(isGroup ? { whatsapp_lid: senderId } : { whatsapp_id: senderId }),
-        birthday: birthdayValidation.pgDate
-      };
-
-      const { data: userData, error: userError } = await supabase
+      // Step 4: Get student data from users table based on student_name
+      const { data: studentData, error: studentError } = await supabase
         .from('users')
-        .update(updateData)
+        .select('id, name, role, whatsapp_id, whatsapp_lid')
         .eq('name', codeData.student_name)
-        .select('name, role')
         .single();
 
-      if (userError || !userData) {
-        console.error('Error updating user:', userError);
-        return '❌ Gagal memperbarui data pengguna. Silakan hubungi admin.';
+      if (studentError || !studentData) {
+        console.error('Error finding student:', studentError);
+        return '❌ Data siswa tidak ditemukan. Silakan hubungi admin.';
       }
 
-      // Mark registration code as used
-      const { error: codeUpdateError } = await supabase
-        .from('registration_codes')
-        .update({
-          is_used: true,
-          used_at: getCurrentWIBTime().toISOString()
-        })
-        .eq('code', registrationCode);
+      // Step 5: Check sender ID type and handle registration accordingly
+      const isPrivateMessage = senderId.endsWith('@s.whatsapp.net');
+      const isGroupMessage = senderId.endsWith('@lid');
 
-      if (codeUpdateError) {
-        console.error('Error updating registration code:', codeUpdateError);
-        // Don't return error here as user is already registered
-      }
+      if (isPrivateMessage) {
+        // Handle Private ID (JID) registration
+        if (studentData.whatsapp_id) {
+          return `❌ ID Pribadi Anda sudah terdaftar.
+Nama: ${studentData.name}
+Role: ${studentData.role}
 
-      return `✅ Pendaftaran berhasil! Selamat datang, ${userData.name}! 
+Jika Anda belum mendaftar dari grup, silakan kirim perintah yang sama di dalam grup.`;
+        }
 
-🎉 Akun Anda sudah sepenuhnya terhubung.
-👤 Role: ${userData.role}
+        // Update whatsapp_id and birthday
+        const { data: updatedUser, error: updateError } = await supabase
+          .from('users')
+          .update({
+            whatsapp_id: senderId,
+            birthday: birthdayValidation.pgDate
+          })
+          .eq('id', studentData.id)
+          .select('name, role')
+          .single();
+
+        if (updateError || !updatedUser) {
+          console.error('Error updating private ID:', updateError);
+          return '❌ Gagal memperbarui ID Pribadi. Silakan hubungi admin.';
+        }
+
+        return `✅ ID Pribadi berhasil ditautkan!
+
+👤 Nama: ${updatedUser.name}
+🏷️ Role: ${updatedUser.role}
 🎂 Birthday: ${birthdayInput}
+📱 ID Pribadi: Terdaftar
 
-Sekarang Anda bisa menggunakan semua fitur bot:
+Jika Anda belum mendaftar dari grup, silakan kirim perintah yang sama di dalam grup.
+
+Sekarang Anda bisa menggunakan fitur bot:
 • .profile - Lihat profil Anda
-• .help - Lihat semua command
-• .birthday list - Lihat daftar ulang tahun
+• .help - Lihat semua command`;
 
-Selamat bergabung di X TKJ C! 🚀`;
+      } else if (isGroupMessage) {
+        // Handle Group ID (LID) registration
+        if (studentData.whatsapp_lid) {
+          return `❌ ID Grup Anda sudah terdaftar.
+Nama: ${studentData.name}
+Role: ${studentData.role}
+
+Jika Anda belum mendaftar dari DM, silakan kirim perintah yang sama di chat pribadi.`;
+        }
+
+        // Update whatsapp_lid and birthday
+        const { data: updatedUser, error: updateError } = await supabase
+          .from('users')
+          .update({
+            whatsapp_lid: senderId,
+            birthday: birthdayValidation.pgDate
+          })
+          .eq('id', studentData.id)
+          .select('name, role')
+          .single();
+
+        if (updateError || !updatedUser) {
+          console.error('Error updating group ID:', updateError);
+          return '❌ Gagal memperbarui ID Grup. Silakan hubungi admin.';
+        }
+
+        return `✅ ID Grup berhasil ditautkan!
+
+👤 Nama: ${updatedUser.name}
+🏷️ Role: ${updatedUser.role}
+🎂 Birthday: ${birthdayInput}
+👥 ID Grup: Terdaftar
+
+Jika Anda belum mendaftar dari DM, silakan kirim perintah yang sama di chat pribadi.
+
+Sekarang Anda bisa menggunakan fitur bot:
+• .profile - Lihat profil Anda
+• .help - Lihat semua command`;
+
+      } else {
+        // Unknown ID format
+        return `❌ Format ID tidak dikenali.
+ID Anda: ${senderId}
+
+Pastikan Anda mengirim perintah ini dari:
+• Chat pribadi (ID berakhiran @s.whatsapp.net)
+• Grup WhatsApp (ID berakhiran @lid)`;
+      }
 
     } catch (error) {
       console.error('Error in daftar command:', error);
