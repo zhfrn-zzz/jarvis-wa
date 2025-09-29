@@ -32,14 +32,14 @@ export async function handleSimpleStickerCommand(
     if (!hasImage && !hasVideo) {
       return {
         success: false,
-        message: `❌ **Tidak ada media yang ditemukan!**
+        message: `❌ *Tidak ada media yang ditemukan!*
 
-📝 **Cara Penggunaan:**
+📝 *Cara Penggunaan:*
 1. Kirim gambar dengan caption \`.sticker\`
 2. Kirim video/GIF dengan caption \`.sticker\`
 3. Reply gambar/video dengan \`.sticker\`
 
-📋 **Format yang didukung:**
+📋 *Format yang didukung:*
 • Gambar: JPG, PNG, WEBP (maks 1MB)
 • Video: MP4, GIF (maks 2MB, 7 detik)`
       };
@@ -77,25 +77,25 @@ export async function handleSimpleStickerCommand(
 
     return {
       success: false, // Not actually processing, just detecting
-      message: `🎨 **Media Terdeteksi untuk Sticker!**
+      message: `🎨 *Media Terdeteksi untuk Sticker!*
 
-✅ **Informasi Media:**
+✅ *Informasi Media:*
 • Type: ${mediaType === 'image' ? 'Gambar' : 'Video'}
 • Source: ${source === 'reply' ? 'Reply message' : 'Direct message'}
 • Size: ${fileSize ? `${(fileSize / 1024 / 1024).toFixed(1)}MB` : 'Unknown'}
 ${hasVideo?.seconds ? `• Duration: ${hasVideo.seconds} detik` : ''}
 
-⚠️ **Status:** Fitur sticker memerlukan dependencies tambahan:
+⚠️ *Status:* Fitur sticker memerlukan dependencies tambahan:
 \`\`\`
 npm install sharp fluent-ffmpeg
 \`\`\`
 
-🔧 **Setelah install dependencies:**
+🔧 *Setelah install dependencies:*
 1. Restart bot
 2. Kirim ulang perintah sticker
 3. Sticker akan otomatis diproses dan dikirim
 
-📝 **Media ini sudah memenuhi syarat untuk dijadikan sticker!**`,
+📝 *Media ini sudah memenuhi syarat untuk dijadikan sticker!*`,
       mediaDetected: { type: mediaType, size: fileSize, source }
     };
 

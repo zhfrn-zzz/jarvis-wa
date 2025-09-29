@@ -10,13 +10,13 @@ const noteCommand: Command = {
   async execute(args: string[], senderId: string, isGroup: boolean): Promise<string> {
     try {
       if (args.length === 0) {
-        return `📝 **Note Commands:**
+        return `📝 *Note Commands:*
 
-**Untuk Semua Orang:**
+*Untuk Semua Orang:*
 • .note list - Lihat daftar semua catatan
 • .note get [id_catatan] - Baca isi catatan
 
-**Untuk Pengurus:**
+*Untuk Pengurus:*
 • .note add [note_id] | [title] | [isi] - Tambah catatan baru
 • .note edit [note_id] | [isi_baru] - Edit isi catatan
 • .note delete [note_id] - Hapus catatan
@@ -67,9 +67,9 @@ async function listNotes(): Promise<string> {
       return '📝 Belum ada catatan yang tersedia.';
     }
 
-    let notesList = '📝 **Daftar Catatan Kelas:**\n\n';
+    let notesList = '📝 *Daftar Catatan Kelas:*\n\n';
     notes.forEach((note, index) => {
-      notesList += `${index + 1}. **${note.title}**\n   ID: \`${note.note_id}\`\n\n`;
+      notesList += `${index + 1}. *${note.title}*\n   ID: \`${note.note_id}\`\n\n`;
     });
 
     notesList += 'Gunakan `.note get [note_id]` untuk membaca isi catatan.';
@@ -106,7 +106,7 @@ async function getNote(args: string[]): Promise<string> {
     const createdByText = note.created_by ? `\nDibuat oleh: ${note.created_by}` : '';
     const updatedAtText = note.updated_at ? `\nTerakhir diubah: ${formatDate(note.updated_at)}` : '';
 
-    return `📝 **${note.title}**
+    return `📝 *${note.title}*
 
 ${note.content}
 
@@ -189,9 +189,9 @@ Contoh: .note add aturan_kelas | Aturan Kelas TKJ C | 1. Piket wajib selesai seb
       return '❌ Gagal menambahkan catatan. Silakan coba lagi.';
     }
 
-    return `✅ **Catatan berhasil ditambahkan!**
+    return `✅ *Catatan berhasil ditambahkan!*
 
-📝 **${data.title}**
+📝 *${data.title}*
 🆔 ID: \`${data.note_id}\`
 👤 Dibuat oleh: ${data.created_by}
 📅 Dibuat: ${formatDate(data.created_at)}
@@ -268,9 +268,9 @@ Contoh: .note edit aturan_kelas | 1. Piket wajib selesai sebelum jam 7...`;
       return '❌ Gagal mengedit catatan. Silakan coba lagi.';
     }
 
-    return `✅ **Catatan berhasil diedit!**
+    return `✅ *Catatan berhasil diedit!*
 
-📝 **${data.title}**
+📝 *${data.title}*
 🆔 ID: \`${data.note_id}\`
 📅 Terakhir diubah: ${formatDate(data.updated_at)}
 
@@ -325,9 +325,9 @@ Contoh: .note delete aturan_kelas`;
       return '❌ Gagal menghapus catatan. Silakan coba lagi.';
     }
 
-    return `✅ **Catatan berhasil dihapus!**
+    return `✅ *Catatan berhasil dihapus!*
 
-📝 **${existingNote.title}**
+📝 *${existingNote.title}*
 🆔 ID: \`${noteId}\`
 
 Catatan telah dihapus dari database.`;

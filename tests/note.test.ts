@@ -27,7 +27,7 @@ describe('Note Command', () => {
     it('should return help message when no arguments provided', async () => {
       const result = await noteCommand.execute([], '1234567890@s.whatsapp.net', false);
 
-      expect(result).toContain('📝 **Note Commands:**');
+      expect(result).toContain('📝 *Note Commands:*');
       expect(result).toContain('.note list');
       expect(result).toContain('.note get');
       expect(result).toContain('.note add');
@@ -52,10 +52,10 @@ describe('Note Command', () => {
 
       const result = await noteCommand.execute(['list'], '1234567890@s.whatsapp.net', false);
 
-      expect(result).toContain('📝 **Daftar Catatan Kelas:**');
-      expect(result).toContain('**Aturan Kelas TKJ C**');
+      expect(result).toContain('📝 *Daftar Catatan Kelas:*');
+      expect(result).toContain('*Aturan Kelas TKJ C*');
       expect(result).toContain('ID: `aturan_kelas`');
-      expect(result).toContain('**Jadwal Piket Mingguan**');
+      expect(result).toContain('*Jadwal Piket Mingguan*');
       expect(result).toContain('ID: `jadwal_piket`');
       expect(mockChain.select).toHaveBeenCalledWith('note_id, title');
       expect(mockChain.order).toHaveBeenCalledWith('created_at', { ascending: false });
@@ -96,7 +96,7 @@ describe('Note Command', () => {
 
       const result = await noteCommand.execute(['get', 'aturan_kelas'], '1234567890@s.whatsapp.net', false);
 
-      expect(result).toContain('📝 **Aturan Kelas TKJ C**');
+      expect(result).toContain('📝 *Aturan Kelas TKJ C*');
       expect(result).toContain('1. Piket wajib selesai sebelum jam 7.');
       expect(result).toContain('2. Kas dibayar setiap Senin.');
       expect(result).toContain('ID: `aturan_kelas`');
@@ -162,8 +162,8 @@ describe('Note Command', () => {
 
       const result = await noteCommand.execute(['add', 'aturan_baru', '|', 'Aturan Baru', '|', 'Isi aturan baru'], '1234567890@s.whatsapp.net', false);
 
-      expect(result).toContain('✅ **Catatan berhasil ditambahkan!**');
-      expect(result).toContain('📝 **Aturan Baru**');
+      expect(result).toContain('✅ *Catatan berhasil ditambahkan!*');
+      expect(result).toContain('📝 *Aturan Baru*');
       expect(result).toContain('🆔 ID: `aturan_baru`');
       expect(result).toContain('👤 Dibuat oleh: Test User');
       expect(mockInsertChain.insert).toHaveBeenCalledWith({
@@ -239,8 +239,8 @@ describe('Note Command', () => {
 
       const result = await noteCommand.execute(['edit', 'test_note', '|', 'New content'], '1234567890@s.whatsapp.net', false);
 
-      expect(result).toContain('✅ **Catatan berhasil diedit!**');
-      expect(result).toContain('📝 **Existing Note**');
+      expect(result).toContain('✅ *Catatan berhasil diedit!*');
+      expect(result).toContain('📝 *Existing Note*');
       expect(mockUpdateChain.update).toHaveBeenCalledWith({
         content: 'New content',
         updated_at: expect.any(String)
@@ -293,8 +293,8 @@ describe('Note Command', () => {
 
       const result = await noteCommand.execute(['delete', 'test_note'], '1234567890@s.whatsapp.net', false);
 
-      expect(result).toContain('✅ **Catatan berhasil dihapus!**');
-      expect(result).toContain('📝 **Note to Delete**');
+      expect(result).toContain('✅ *Catatan berhasil dihapus!*');
+      expect(result).toContain('📝 *Note to Delete*');
       expect(result).toContain('🆔 ID: `test_note`');
       expect(mockDeleteChain.delete).toHaveBeenCalled();
       expect(mockDeleteChain.eq).toHaveBeenCalledWith('note_id', 'test_note');

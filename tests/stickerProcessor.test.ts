@@ -136,7 +136,7 @@ describe('Sticker Command', () => {
     
     const result = await stickerCommand.execute([], '1234567890@s.whatsapp.net', false);
     
-    expect(result).toContain('🎨 **Sticker Converter**');
+    expect(result).toContain('🎨 *Sticker Converter*');
     expect(result).toContain('Cara Penggunaan:');
     expect(result).toContain('.sticker');
     expect(result).toContain('Format gambar: JPG, PNG, WEBP');

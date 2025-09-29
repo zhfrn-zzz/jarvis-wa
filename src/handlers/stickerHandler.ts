@@ -35,14 +35,14 @@ export async function handleStickerCommand(
     if (!hasImage && !hasVideo && !hasDocument) {
       return {
         success: false,
-        message: `❌ **Tidak ada media yang ditemukan!**
+        message: `❌ *Tidak ada media yang ditemukan!*
 
-📝 **Cara Penggunaan:**
+📝 *Cara Penggunaan:*
 1. Kirim gambar dengan caption \`.sticker\`
 2. Kirim video/GIF dengan caption \`.sticker\`
 3. Reply gambar/video dengan \`.sticker\`
 
-📋 **Format yang didukung:**
+📋 *Format yang didukung:*
 • Gambar: JPG, PNG, WEBP (maks 1MB)
 • Video: MP4, GIF (maks 2MB, 7 detik)`
       };
@@ -75,9 +75,9 @@ export async function handleStickerCommand(
     if (mediaType === 'unknown') {
       return {
         success: false,
-        message: `❌ **Format media tidak didukung!**
+        message: `❌ *Format media tidak didukung!*
 
-📋 **Format yang didukung:**
+📋 *Format yang didukung:*
 • Gambar: JPG, PNG, WEBP
 • Video: MP4, GIF
 

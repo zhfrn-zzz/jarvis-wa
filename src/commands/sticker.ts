@@ -10,19 +10,19 @@ const stickerCommand: Command = {
       // Note: This command requires special handling in the message handler
       // because it needs access to the actual WhatsApp message object to process media
       
-      return `🎨 **Sticker Converter**
+      return `🎨 *Sticker Converter*
 
-📝 **Cara Penggunaan:**
+📝 *Cara Penggunaan:*
 1. Kirim gambar dengan caption \`.sticker\`
 2. Kirim video/GIF dengan caption \`.sticker\`
 3. Reply gambar/video dengan \`.sticker\`
 
-📋 **Ketentuan:**
+📋 *Ketentuan:*
 • Format gambar: JPG, PNG, WEBP
 • Format video: MP4, GIF (maks 7 detik)
 • Ukuran file maksimal: 1MB untuk gambar, 2MB untuk video
 
-⚠️ **Catatan:** Command ini memerlukan media (gambar/video) untuk diproses.`;
+⚠️ *Catatan:* Command ini memerlukan media (gambar/video) untuk diproses.`;
 
     } catch (error) {
       console.error('Error in sticker command:', error);

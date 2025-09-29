@@ -44,7 +44,7 @@ const jadwalCommand: Command = {
 
       const schedule: JadwalKelas = data;
       
-      const dayLabel = args[0]?.toLowerCase() === 'besok' ? 'Besok' : 'Hari Ini';
+      const dayLabel = args[0]?.toLowerCase() === 'besok' ? 'Besok' : 'Hari';
       
       return `Jadwal ${dayLabel} (${getIndonesianDayDisplay(targetDay)}):
 ${schedule.Jam} - ${schedule['Mata Pelajaran']}

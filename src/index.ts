@@ -174,7 +174,7 @@ class JarvisBot {
             
             // Send success message
             await this.sock.sendMessage(senderId, { 
-              text: `✅ **Stiker ${stickerResult.isAnimated ? 'bergerak' : 'statis'} berhasil dibuat!**` 
+              text: `✅ *Stiker ${stickerResult.isAnimated ? 'bergerak' : 'statis'} berhasil dibuat!*` 
             });
           } else {
             console.log('[JarvisBot] Sticker processing failed:', stickerResult.message);
