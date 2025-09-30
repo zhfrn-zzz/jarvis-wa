@@ -85,6 +85,12 @@ class JarvisBot {
       return;
     }
 
+    // Handle tophoto command specially (requires quoted sticker processing)
+    if (messageText && this.isToPhotoCommand(messageText)) {
+      await this.handleToPhotoCommand(message, senderId);
+      return;
+    }
+
     // Handle regular text commands
     if (!messageText || !messageText.startsWith('.')) return;
 
@@ -126,6 +132,11 @@ class JarvisBot {
   private isStickerCommand(messageText: string): boolean {
     const text = messageText.toLowerCase().trim();
     return text === '.sticker' || text === '.s' || text === '.stiker';
+  }
+
+  private isToPhotoCommand(messageText: string): boolean {
+    const text = messageText.toLowerCase().trim();
+    return text === '.tophoto' || text === '.toimg';
   }
 
   private async handleStickerCommand(message: any, senderId: string): Promise<void> {
@@ -195,6 +206,46 @@ class JarvisBot {
       console.error('[JarvisBot] Error in sticker command:', error);
       await this.sock.sendMessage(senderId, {
         text: '❌ Terjadi kesalahan saat memproses sticker command.'
+      });
+    }
+  }
+
+  private async handleToPhotoCommand(message: any, senderId: string): Promise<void> {
+    try {
+      console.log('[JarvisBot] Processing tophoto command');
+
+      // Check for quoted message (reply)
+      const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      let quotedMessageObj = undefined;
+      
+      if (quotedMessage) {
+        quotedMessageObj = {
+          key: { id: 'quoted' }, // Mock key for quoted message
+          message: quotedMessage
+        } as any;
+      }
+
+      // Import tophoto handler
+      const { handleToPhotoCommand } = await import('./handlers/tophotoHandler');
+      const result = await handleToPhotoCommand(message, quotedMessageObj);
+
+      if (result.success && result.imageBuffer) {
+        console.log(`[JarvisBot] Sticker to photo conversion successful, animated: ${result.isAnimated}`);
+        
+        // Send image as photo
+        await this.sock.sendMessage(senderId, {
+          image: result.imageBuffer,
+          caption: `✅ *Stiker ${result.isAnimated ? 'animasi' : 'statis'} berhasil dikonversi menjadi gambar!*`
+        });
+      } else {
+        console.log('[JarvisBot] Sticker to photo conversion failed:', result.message);
+        await this.sock.sendMessage(senderId, { text: result.message });
+      }
+
+    } catch (error) {
+      console.error('[JarvisBot] Error in tophoto command:', error);
+      await this.sock.sendMessage(senderId, {
+        text: '❌ Terjadi kesalahan saat memproses tophoto command.'
       });
     }
   }

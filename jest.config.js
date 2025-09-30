@@ -6,6 +6,12 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ],
+  moduleNameMapper: {
+    '^@whiskeysockets/baileys$': '<rootDir>/tests/mocks/baileys.mock.js'
+  },
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
