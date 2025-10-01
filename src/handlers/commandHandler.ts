@@ -60,7 +60,7 @@ class CommandHandler {
     return allowedRoles.includes(userRole);
   }
 
-  async handleMessage(message: string, senderId: string, isGroup: boolean): Promise<string | null> {
+  async handleMessage(message: string, senderId: string, isGroup: boolean, fullMessage?: any): Promise<string | null> {
     if (!message.startsWith('.')) {
       return null;
     }
@@ -85,8 +85,8 @@ class CommandHandler {
     }
 
     try {
-      const response = await command.execute(args, senderId, isGroup);
-      
+      const response = await command.execute(args, senderId, isGroup, fullMessage);
+
       // Add XP for successful command execution
       if (response && !response.startsWith('❌') && !response.includes('tidak ditemukan')) {
         const levelInfo = await addXp(senderId, 5);

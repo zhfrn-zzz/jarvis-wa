@@ -73,5 +73,5 @@ export interface Command {
   aliases?: string[];
   description: string;
   allowedRoles?: string[];
-  execute: (args: string[], senderId: string, isGroup: boolean) => Promise<string>;
+  execute: (args: string[], senderId: string, isGroup: boolean, message?: any) => Promise<string>;
 }
